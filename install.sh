@@ -10,7 +10,11 @@ OS="$(uname -s)"
 if [ -n "$PREFIX" ] && [[ "$PREFIX" == *"com.termux"* ]]; then
     echo "=> Detected Termux (Android)"
     pkg update -y
-    pkg install -y python git chromium x11-repo tur-repo
+    # Install additional repositories first, as Chromium depends on them
+    pkg install -y x11-repo tur-repo
+    pkg update -y
+    # Now install the actual packages
+    pkg install -y python git chromium
     export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
     PYTHON_CMD="python"
 elif [[ "$OS" == "Linux"* ]]; then
