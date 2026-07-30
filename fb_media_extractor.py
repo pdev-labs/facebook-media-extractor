@@ -262,18 +262,25 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
         print(f"Navigating to Facebook to load cookies...")
         driver.get("https://www.facebook.com")
         
-        if os.path.exists(state_file) and not login_mode:
+        if os.path.exists(state_file):
             with open(state_file, 'r') as f:
                 cookies = json.load(f)
                 for cookie in cookies:
                     if 'sameSite' in cookie:
                         del cookie['sameSite']
-                    driver.add_cookie(cookie)
-            print("Cookies loaded!")
+                    try:
+                        driver.add_cookie(cookie)
+                    except:
+                        pass
+            print("Previous session cookies loaded!")
+            
+            # Refresh to apply cookies visibly if we are in login mode
+            if login_mode:
+                driver.refresh()
 
         if login_mode:
-            print("Please log in to your account in the browser window.")
-            input("Press Enter here in the terminal AFTER you have successfully logged in...")
+            print("\nPlease log in to your account in the browser window if you aren't already.")
+            input("Press Enter here in the terminal AFTER you are successfully logged in (or if you already are)...")
             cookies = driver.get_cookies()
             with open(state_file, 'w') as f:
                 json.dump(cookies, f)
