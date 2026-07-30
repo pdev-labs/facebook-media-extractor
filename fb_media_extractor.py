@@ -58,6 +58,9 @@ def download_video(url, output_dir):
         print(f"Failed to download video {url}: {e}")
         return False
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def scroll_and_collect(driver, media_types, max_scrolls):
     print("Scrolling to load dynamic content and collecting media...")
     image_urls = set()
@@ -65,8 +68,12 @@ def scroll_and_collect(driver, media_types, max_scrolls):
     post_texts = set()
     
     no_new_content_count = 0
+    i = 0
     
-    for i in range(max_scrolls):
+    while True:
+        if max_scrolls > 0 and i >= max_scrolls:
+            break
+            
         current_count = len(image_urls) + len(video_urls) + len(post_texts)
         
         if "images" in media_types or "all" in media_types:
@@ -92,7 +99,8 @@ def scroll_and_collect(driver, media_types, max_scrolls):
                     post_texts.add(text)
         
         new_count = len(image_urls) + len(video_urls) + len(post_texts)
-        print(f"Scroll {i+1}/{max_scrolls}: Found {len(image_urls)} images, {len(video_urls)} video links, {len(post_texts)} posts...")
+        limit_text = str(max_scrolls) if max_scrolls > 0 else "Unlimited"
+        print(f"Scroll {i+1}/{limit_text}: Found {len(image_urls)} images, {len(video_urls)} video links, {len(post_texts)} posts...")
         
         if new_count == current_count:
             no_new_content_count += 1
@@ -105,6 +113,7 @@ def scroll_and_collect(driver, media_types, max_scrolls):
             
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)
+        i += 1
         
     return list(image_urls), list(video_urls), list(post_texts)
 
@@ -284,9 +293,10 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
 def settings_menu():
     config = load_config()
     while True:
+        clear_screen()
         print("\n--- Settings ---")
         print(f"1. Change Download Directory (Current: {config['download_directory']})")
-        print(f"2. Change Max Scrolls Limit (Current: {config['max_scrolls']})")
+        print(f"2. Change Max Scrolls Limit (Current: {config['max_scrolls']} | 0 = Unlimited)")
         print("3. Back to Main Menu")
         choice = input("Select an option: ")
         
@@ -296,23 +306,28 @@ def settings_menu():
                 config["download_directory"] = new_dir.strip()
                 save_config(config)
                 print("Download directory updated!")
+                time.sleep(1)
         elif choice == '2':
             try:
-                new_limit = int(input("Enter new max scrolls limit (e.g. 50, 100, 200): "))
-                if new_limit > 0:
+                new_limit = int(input("Enter new max scrolls limit (0 for unlimited): "))
+                if new_limit >= 0:
                     config["max_scrolls"] = new_limit
                     save_config(config)
                     print("Max scrolls limit updated!")
+                    time.sleep(1)
             except ValueError:
                 print("Please enter a valid number.")
+                time.sleep(1)
         elif choice == '3':
             break
         else:
             print("Invalid option.")
+            time.sleep(1)
 
 def interactive_mode():
     config = load_config()
     while True:
+        clear_screen()
         print("\n=== Facebook Media Extractor ===")
         print("1. Download Images (Single URL or Album)")
         print("2. Download Videos (Single URL or Feed)")
@@ -327,6 +342,7 @@ def interactive_mode():
             url = input("Enter Facebook URL: ").strip()
             if not url:
                 print("Invalid URL.")
+                time.sleep(1)
                 continue
                 
             media_types = []
@@ -337,18 +353,23 @@ def interactive_mode():
             
             is_profile = (choice == '4')
             
+            clear_screen()
             extract_media(url, media_types, load_config(), is_profile=is_profile)
+            input("\nPress Enter to return to the main menu...")
             
         elif choice == '5':
             settings_menu()
         elif choice == '6':
+            clear_screen()
             print("To login, we will open a browser window. Once logged in, come back here and press Enter.")
             extract_media("https://www.facebook.com", [], load_config(), login_mode=True)
+            input("\nPress Enter to return to the main menu...")
         elif choice == '7':
             print("Exiting...")
             sys.exit(0)
         else:
             print("Invalid option. Please choose between 1 and 7.")
+            time.sleep(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract Media from Facebook")
