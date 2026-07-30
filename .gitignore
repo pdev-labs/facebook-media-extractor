@@ -1,0 +1,18 @@
+# Virtual environments
+venv/
+env/
+.env
+
+# Playwright state and downloaded images
+fb_state.json
+fb_images*
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# OS generated files
+.DS_Store
+Thumbs.db
