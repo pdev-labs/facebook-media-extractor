@@ -1,3 +1,42 @@
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+
+def _bootstrap_env():
+    """Automatically create and use a virtual environment if not already in one."""
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    venv_dir = os.path.join(base_dir, "venv")
+    
+    if os.name == 'nt':
+        venv_python = os.path.join(venv_dir, "Scripts", "python.exe")
+    else:
+        venv_python = os.path.join(venv_dir, "bin", "python")
+        
+    # If already running inside the venv, just return and proceed
+    if sys.executable == venv_python or sys.prefix == venv_dir:
+        return
+
+    print("--- Facebook Media Extractor Setup ---")
+    if not os.path.exists(venv_python):
+        print("Creating virtual environment (venv) for isolation...")
+        import venv
+        venv.create(venv_dir, with_pip=True)
+    
+    print("Checking dependencies...")
+    req_file = os.path.join(base_dir, "requirements.txt")
+    if os.path.exists(req_file):
+        subprocess.check_call([venv_python, "-m", "pip", "install", "-r", req_file, "--quiet"])
+    else:
+        subprocess.check_call([venv_python, "-m", "pip", "install", "selenium", "yt-dlp", "requests", "--quiet"])
+    
+    print("Environment ready! Starting extractor...\n")
+    # Restart the script using the venv Python
+    sys.exit(subprocess.call([venv_python] + sys.argv))
+
+# Run bootstrap before importing any 3rd party modules!
+_bootstrap_env()
+
 import os
 import time
 import requests
