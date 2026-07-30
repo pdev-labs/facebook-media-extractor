@@ -20,8 +20,15 @@ def _bootstrap_env():
     print("--- Facebook Media Extractor Setup ---")
     if not os.path.exists(venv_python):
         print("Creating virtual environment (venv) for isolation...")
-        import venv
-        venv.create(venv_dir, with_pip=True)
+        try:
+            import venv
+            venv.create(venv_dir, with_pip=True)
+        except Exception as e:
+            print(f"Error creating virtual environment: {e}")
+            if sys.platform.startswith('linux'):
+                print("\nHint: On Debian/Ubuntu, you may need to install the venv package manually:")
+                print("      sudo apt install python3-venv\n")
+            sys.exit(1)
     
     print("Checking dependencies...")
     req_file = os.path.join(base_dir, "requirements.txt")
