@@ -104,41 +104,67 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Basic Download (Single Pages/Albums)
-If the page doesn't prompt a login wall, simply run:
+### 🚀 Interactive Mode (Recommended)
+The absolute easiest way to use this tool is the brand new interactive mode! Simply run the script with no arguments:
+```bash
+python fb_media_extractor.py
+```
+This will launch a friendly menu in your terminal:
+```
+=== Facebook Media Extractor ===
+1. Download Images (Single URL or Album)
+2. Download Videos (Single URL or Feed)
+3. Download Posts (Text)
+4. Download Full Profile (DP, Timeline, Photos, Videos)
+5. Settings
+6. Login (Generate Session Cookie)
+7. Exit
+```
+Simply type the number of what you want to do and follow the prompts! 
+
+**Cross-Platform Automatic Downloads**: 
+By default, the script automatically figures out where your system's `Downloads` folder is (whether you're on Windows, macOS, Linux, or Android via Termux) and creates an `fb_media` folder inside it! You can change this default location inside the **Settings (Option 5)** menu.
+
+---
+
+### Command-Line Mode (For Power Users)
+
+#### Basic Download (Single Pages/Albums)
+If you prefer bypassing the menu, run:
 ```bash
 python fb_media_extractor.py "https://www.facebook.com/YOUR_LINK_HERE" --type all
 ```
 The `--type` flag controls what you download. Available options are `images` (default), `videos`, `posts`, or `all`.
 
-The media will be downloaded into `fb_media/images/`, `fb_media/videos/`, and `fb_media/posts/`.
-
-### Full Profile Extraction (Advanced)
-If you want to download an *entire* user's profile (including their DP, Cover Photo, and all historical media from their Photos and Videos tabs), use the `--profile` flag and provide the base profile URL:
+#### Full Profile Extraction (Advanced)
+If you want to download an *entire* user's profile, use the `--profile` flag and provide the base profile URL:
 ```bash
 python fb_media_extractor.py "https://www.facebook.com/username" --type all --profile
 ```
-Because full profiles can be massive, the script defaults to a maximum of 50 scrolls per tab to protect your account from being rate-limited by Facebook. You can increase or decrease this limit using the `--max-scrolls` flag:
+Because full profiles can be massive, the script defaults to a maximum of 50 scrolls per tab to protect your account. You can increase this using the `--max-scrolls` flag or by changing it in the Interactive Settings menu:
 ```bash
 python fb_media_extractor.py "https://www.facebook.com/username" --profile --max-scrolls 200
 ```
-When using `--profile`, the media is automatically organized into a folder named after the username (e.g., `fb_media/username/images/`).
+When using `--profile`, the media is automatically organized into a folder named after the username with subfolders for `dp_and_cover`, `images`, `videos`, and `posts`.
+
+---
 
 ### Bypassing Login Blocks (For large albums or restricted content)
 Facebook frequently blocks anonymous users from scrolling down. To bypass this, you need to provide your Facebook login cookies. The script looks for a file named `fb_cookies.json`. 
 
-#### Method 1: Using the Desktop (Windows/Mac/Linux) or Termux:X11
+#### Method 1: Interactive Menu
+Simply select **Option 6** from the interactive menu, log in through the popup browser, and press Enter.
+
+#### Method 2: Command Line (Desktop/Termux:X11)
 If you are on a desktop environment, or have a GUI set up in Termux (like Termux:X11), run the script once with the `--login` flag:
 ```bash
-python fb_media_extractor.py "https://www.facebook.com/YOUR_LINK_HERE" --login
+python fb_media_extractor.py --login
 ```
 1. A Chrome browser will pop up. 
 2. Log in to your Facebook account manually.
 3. Return to your terminal and press **Enter**.
 
-Your session will be saved to `fb_cookies.json`.
-
-#### Method 2: The "No PC" Mobile Workaround for Termux
+#### Method 3: The "No PC" Mobile Workaround for Termux
 If you are using Termux on your phone and don't have a graphical interface set up, you can get the cookies directly from your phone's browser:
 1. Download **Kiwi Browser** from the Google Play Store (it supports desktop Chrome extensions).
 2. Install the [Cookie-Editor extension](https://chrome.google.com/webstore/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm).
@@ -149,8 +175,6 @@ If you are using Termux on your phone and don't have a graphical interface set u
    nano fb_cookies.json
    ```
 6. Paste the cookies from your clipboard, save the file (Ctrl+O, Enter), and exit (Ctrl+X).
-
-For all future runs, you no longer need the `--login` flag; the script will automatically use your saved `fb_cookies.json` session and run completely in the background (headless) to scrape the images.
 
 ## Disclaimer
 
