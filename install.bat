@@ -46,9 +46,6 @@ echo =^> Installing Python dependencies...
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-echo =^> Installing Playwright browser binaries...
-playwright install chromium
-
 echo ========================================================
 echo  Installation complete! 
 echo  You can now run the tool using:

@@ -1,77 +1,95 @@
-import asyncio
 import os
+import time
 import requests
-from playwright.async_api import async_playwright
+import sys
+import json
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 
-async def download_images_from_fb(url, output_dir="fb_images", login_mode=False):
+def download_images_from_fb(url, output_dir="fb_images", login_mode=False):
     """
-    Scrapes images from a public Facebook link using Playwright.
+    Scrapes images from a public Facebook link using Selenium.
     """
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    state_file = "fb_state.json"
+    state_file = "fb_cookies.json"
     
     # Detect Termux (Android) environment
     is_termux = "com.termux" in os.environ.get("PREFIX", "")
-    executable_path = None
-    if is_termux:
-        executable_path = "/data/data/com.termux/files/usr/bin/chromium"
-        print("Detected Termux environment. Using system Chromium...")
+    
+    chrome_options = Options()
+    if not login_mode:
+        chrome_options.add_argument("--headless=new")
+        
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 
-    async with async_playwright() as p:
-        # Launch browser in headed mode if user needs to log in, else headless
-        launch_args = {"headless": not login_mode}
-        if executable_path:
-            launch_args["executable_path"] = executable_path
-            # In Termux, running headed (login_mode) might require X11 setup (like Termux:X11). 
-            # If they don't have it, login_mode will likely fail to open a window.
-            
-        browser = await p.chromium.launch(**launch_args)
+    driver = None
+    if is_termux:
+        print("Detected Termux environment. Using system Chromium...")
+        chrome_options.binary_location = "/data/data/com.termux/files/usr/bin/chromium"
+        # In Termux, chromedriver should be installed via pkg and available in PATH
+        # Usually it's in /data/data/com.termux/files/usr/bin/chromedriver
+        try:
+            driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e:
+            print("Failed to start Chromium on Termux. Make sure 'chromedriver' package is installed.")
+            print(f"Error details: {e}")
+            return
+    else:
+        # Standard desktop: use webdriver_manager
+        try:
+            from webdriver_manager.chrome import ChromeDriverManager
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+        except ImportError:
+            print("webdriver-manager is not installed. Attempting to use system chromedriver...")
+            driver = webdriver.Chrome(options=chrome_options)
+
+    try:
+        print(f"Navigating to Facebook...")
+        driver.get("https://www.facebook.com")
         
-        context_args = {
-            "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
-        }
-        
-        # Load existing cookies if available
-        if os.path.exists(state_file):
-            context_args["storage_state"] = state_file
-            
-        context = await browser.new_context(**context_args)
-        page = await context.new_page()
-        
+        # Load cookies if they exist and we are not forcing login
+        if os.path.exists(state_file) and not login_mode:
+            with open(state_file, 'r') as f:
+                cookies = json.load(f)
+                for cookie in cookies:
+                    # Selenium requires strictly proper cookie dicts
+                    if 'sameSite' in cookie:
+                        del cookie['sameSite']
+                    driver.add_cookie(cookie)
+            print("Cookies loaded!")
+
         if login_mode:
-            print("Opening Facebook for you to log in...")
-            await page.goto("https://www.facebook.com")
             print("Please log in to your account in the browser window.")
             input("Press Enter here in the terminal AFTER you have successfully logged in...")
-            # Save the state for future runs
-            await context.storage_state(path=state_file)
-            print(f"Session saved to {state_file}! You won't need to log in next time.")
-
+            # Save cookies
+            cookies = driver.get_cookies()
+            with open(state_file, 'w') as f:
+                json.dump(cookies, f)
+            print(f"Session cookies saved to {state_file}! You won't need to log in next time.")
         
-        print(f"Navigating to {url}")
-        try:
-            await page.goto(url, timeout=60000)
-        except Exception as e:
-            print(f"Error navigating to page: {e}")
-            await browser.close()
-            return
+        print(f"Navigating to album: {url}")
+        driver.get(url)
+        time.sleep(3) # Wait for initial load
         
         print("Scrolling to load dynamic content and collecting images...")
         image_urls = set()
         
-        # Keep scrolling until we don't find any new images for a few consecutive scrolls
         max_scrolls = 50
         no_new_images_count = 0
         
         for i in range(max_scrolls):
-            # Extract images currently in the DOM
-            img_elements = await page.query_selector_all('img')
+            img_elements = driver.find_elements(By.TAG_NAME, 'img')
             current_count = len(image_urls)
             
             for img in img_elements:
-                src = await img.get_attribute('src')
+                src = img.get_attribute('src')
                 if src and src.startswith('http') and 'emoji' not in src:
                     image_urls.add(src)
             
@@ -83,17 +101,13 @@ async def download_images_from_fb(url, output_dir="fb_images", login_mode=False)
             else:
                 no_new_images_count = 0
                 
-            # If no new images were found for 3 consecutive scrolls, we likely reached the bottom
             if no_new_images_count >= 3:
                 print("No new images found for 3 scrolls. Reached the bottom of the album.")
                 break
                 
-            # Scroll to the very bottom of the page
-            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            await page.wait_for_timeout(2000) # Wait for network requests to load new images
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2) # Wait for network requests
 
-        await browser.close()
-        
         image_urls = list(image_urls)
         print(f"Found {len(image_urls)} potential images after full scroll.")
         
@@ -102,7 +116,6 @@ async def download_images_from_fb(url, output_dir="fb_images", login_mode=False)
             try:
                 response = requests.get(img_url, timeout=10)
                 if response.status_code == 200:
-                    # Filter out tiny images based on content length (e.g., < 5KB)
                     if len(response.content) > 5000:
                         filename = os.path.join(output_dir, f"image_{downloaded_count+1}.jpg")
                         with open(filename, 'wb') as f:
@@ -114,6 +127,12 @@ async def download_images_from_fb(url, output_dir="fb_images", login_mode=False)
                 
         print(f"Successfully downloaded {downloaded_count} images to '{output_dir}/'.")
 
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    finally:
+        if driver:
+            driver.quit()
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) < 2:
@@ -123,9 +142,8 @@ if __name__ == "__main__":
     url = sys.argv[1]
     login_mode = len(sys.argv) > 2 and sys.argv[2] == "--login"
     
-    # If the first argument is --login and no URL is provided, handle it
     if url == "--login":
         print("Please provide a URL: python fb_image_downloader.py <url> --login")
         sys.exit(1)
         
-    asyncio.run(download_images_from_fb(url, login_mode=login_mode))
+    download_images_from_fb(url, login_mode=login_mode)

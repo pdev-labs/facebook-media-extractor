@@ -11,7 +11,7 @@ A robust and reliable Python tool to scrape and download full resolution images 
 ## Prerequisites
 
 - Python 3.8+
-- [Playwright](https://playwright.dev/python/)
+- [Selenium](https://pypi.org/project/selenium/)
 - [Requests](https://pypi.org/project/requests/)
 
 ## Installation
@@ -56,11 +56,13 @@ playwright install chromium
 ```
 
 ### Termux (Android)
-Playwright does not officially support Android, but the script is configured to automatically detect Termux and use the system's Chromium browser instead of trying to download incompatible binaries.
+The script is configured to automatically detect Termux and use the system's natively installed Chromium browser for full Android compatibility!
 ```bash
 # 1. Install required system packages
 pkg update && pkg upgrade
-pkg install python git chromium 
+pkg install python git x11-repo tur-repo
+pkg update
+pkg install chromium
 
 # 2. Clone the repository
 git clone https://github.com/YOUR_USERNAME/facebook-media-extractor.git
@@ -70,8 +72,7 @@ cd facebook-media-extractor
 python -m venv venv
 source venv/bin/activate
 
-# 4. Install Python dependencies (skip Playwright's default binary download)
-export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+# 4. Install Python dependencies
 pip install -r requirements.txt
 ```
 *Note: In Termux, the `--login` flag (which opens a visible browser window) requires you to have an X11 environment (like Termux:X11) installed. If you don't have a GUI set up in Termux, you can generate your `fb_state.json` file on a PC and copy it over to your phone!*

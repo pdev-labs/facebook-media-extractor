@@ -15,7 +15,6 @@ if [ -n "$PREFIX" ] && [[ "$PREFIX" == *"com.termux"* ]]; then
     pkg update -y
     # Now install the actual packages
     pkg install -y python git chromium
-    export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
     PYTHON_CMD="python"
 elif [[ "$OS" == "Linux"* ]]; then
     if [ -f /etc/debian_version ]; then
@@ -60,13 +59,6 @@ fi
 echo "=> Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
-
-if [ -z "$PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD" ]; then
-    echo "=> Installing Playwright browser binaries..."
-    playwright install chromium
-else
-    echo "=> Skipping Playwright binary download (Termux Environment)..."
-fi
 
 echo "========================================================"
 echo " Installation complete! "
