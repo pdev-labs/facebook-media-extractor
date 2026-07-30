@@ -7,7 +7,8 @@ import argparse
 import yt_dlp
 import re
 import platform
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, parse_qs
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -122,32 +123,49 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
     Scrapes media from a public Facebook link using Selenium.
     """
     parsed_url = urlparse(url)
-    username = parsed_url.path.strip('/').split('/')[0]
+    query_params = parse_qs(parsed_url.query)
     
+    if 'vanity' in query_params:
+        username = query_params['vanity'][0]
+    elif 'set' in query_params and 'pb.' in query_params['set'][0]:
+        username = "page_album"
+    else:
+        path_parts = [p for p in parsed_url.path.strip('/').split('/') if p]
+        if path_parts:
+            username = path_parts[0]
+            if username in ['media', 'photo.php', 'video.php', 'watch', 'groups', 'events', 'pages', 'share', 'reel']:
+                if 'id' in query_params:
+                    username = query_params['id'][0]
+                elif 'v' in query_params:
+                    username = query_params['v'][0]
+                elif len(path_parts) > 1:
+                    username = path_parts[1]
+                else:
+                    username = "unknown_user"
+        else:
+            username = "unknown_user"
+            
     base_output_dir = config["download_directory"]
     max_scrolls = config["max_scrolls"]
     
+    current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    base_output_dir = os.path.join(base_output_dir, username, current_time)
+    
+    dp_dir = os.path.join(base_output_dir, "dp_and_cover")
+    images_dir = os.path.join(base_output_dir, "images")
+    videos_dir = os.path.join(base_output_dir, "videos")
+    posts_dir = os.path.join(base_output_dir, "posts")
+    
     if is_profile:
         print(f"Profile mode enabled. Target username: {username}")
-        base_output_dir = os.path.join(base_output_dir, username)
-        
-        dp_dir = os.path.join(base_output_dir, "dp_and_cover")
-        images_dir = os.path.join(base_output_dir, "images")
-        videos_dir = os.path.join(base_output_dir, "videos")
-        posts_dir = os.path.join(base_output_dir, "posts")
-        
         os.makedirs(dp_dir, exist_ok=True)
+    
+    if "images" in media_types or "all" in media_types or is_profile: 
         os.makedirs(images_dir, exist_ok=True)
+    if "videos" in media_types or "all" in media_types or is_profile: 
         os.makedirs(videos_dir, exist_ok=True)
+    if "posts" in media_types or "all" in media_types or is_profile: 
         os.makedirs(posts_dir, exist_ok=True)
-    else:
-        images_dir = os.path.join(base_output_dir, "images")
-        videos_dir = os.path.join(base_output_dir, "videos")
-        posts_dir = os.path.join(base_output_dir, "posts")
-        
-        if "images" in media_types or "all" in media_types: os.makedirs(images_dir, exist_ok=True)
-        if "videos" in media_types or "all" in media_types: os.makedirs(videos_dir, exist_ok=True)
-        if "posts" in media_types or "all" in media_types: os.makedirs(posts_dir, exist_ok=True)
 
     state_file = "fb_cookies.json"
     is_termux = "com.termux" in os.environ.get("PREFIX", "")
@@ -172,11 +190,22 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
             return
     else:
         try:
-            from webdriver_manager.chrome import ChromeDriverManager
-            service = Service(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=service, options=chrome_options)
-        except ImportError:
+            import shutil
+            import platform
+            
+            # Only set binary_location manually on Linux; Windows/Mac are handled automatically by Selenium Manager
+            if platform.system() == "Linux":
+                if not (shutil.which("google-chrome") or shutil.which("google-chrome-stable")):
+                    if shutil.which("chromium"):
+                        chrome_options.binary_location = shutil.which("chromium")
+                    elif shutil.which("chromium-browser"):
+                        chrome_options.binary_location = shutil.which("chromium-browser")
+                    
             driver = webdriver.Chrome(options=chrome_options)
+        except Exception as e:
+            print(f"Failed to start browser: {e}")
+            return
+
 
     try:
         print(f"Navigating to Facebook to load cookies...")
