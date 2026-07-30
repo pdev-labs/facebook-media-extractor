@@ -31,7 +31,7 @@ def download_images_from_fb(url, output_dir="fb_images", login_mode=False):
     driver = None
     if is_termux:
         print("Detected Termux environment. Using system Chromium...")
-        chrome_options.binary_location = "/data/data/com.termux/files/usr/bin/chromium"
+        chrome_options.binary_location = "/data/data/com.termux/files/usr/bin/chromium-browser"
         # In Termux, chromedriver should be installed via pkg and available in PATH
         # Usually it's in /data/data/com.termux/files/usr/bin/chromedriver
         try:
