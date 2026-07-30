@@ -122,6 +122,19 @@ def scroll_and_collect(driver, media_types, max_scrolls):
         if max_scrolls > 0 and i >= max_scrolls:
             break
             
+        # Attempt to auto-dismiss blocking modals (like "Sleep Mode", "Cookies", etc.)
+        try:
+            buttons = driver.find_elements(By.XPATH, "//*[text()='OK' or text()='Accept' or text()='Allow' or text()='Close' or text()='Not Now']")
+            for btn in buttons:
+                if btn.is_displayed():
+                    try:
+                        driver.execute_script("arguments[0].click();", btn)
+                        time.sleep(0.5)
+                    except:
+                        pass
+        except:
+            pass
+
         current_count = len(image_urls) + len(video_urls) + len(post_texts)
         
         if "images" in media_types or "all" in media_types:
