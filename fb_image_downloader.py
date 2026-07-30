@@ -35,7 +35,8 @@ def download_images_from_fb(url, output_dir="fb_images", login_mode=False):
         # In Termux, chromedriver should be installed via pkg and available in PATH
         # Usually it's in /data/data/com.termux/files/usr/bin/chromedriver
         try:
-            driver = webdriver.Chrome(options=chrome_options)
+            service = Service(executable_path="/data/data/com.termux/files/usr/bin/chromedriver")
+            driver = webdriver.Chrome(service=service, options=chrome_options)
         except Exception as e:
             print("Failed to start Chromium on Termux. Make sure 'chromedriver' package is installed.")
             print(f"Error details: {e}")
