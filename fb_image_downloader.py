@@ -11,10 +11,23 @@ async def download_images_from_fb(url, output_dir="fb_images", login_mode=False)
         os.makedirs(output_dir)
 
     state_file = "fb_state.json"
+    
+    # Detect Termux (Android) environment
+    is_termux = "com.termux" in os.environ.get("PREFIX", "")
+    executable_path = None
+    if is_termux:
+        executable_path = "/data/data/com.termux/files/usr/bin/chromium"
+        print("Detected Termux environment. Using system Chromium...")
 
     async with async_playwright() as p:
         # Launch browser in headed mode if user needs to log in, else headless
-        browser = await p.chromium.launch(headless=not login_mode)
+        launch_args = {"headless": not login_mode}
+        if executable_path:
+            launch_args["executable_path"] = executable_path
+            # In Termux, running headed (login_mode) might require X11 setup (like Termux:X11). 
+            # If they don't have it, login_mode will likely fail to open a window.
+            
+        browser = await p.chromium.launch(**launch_args)
         
         context_args = {
             "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
