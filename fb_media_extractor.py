@@ -277,7 +277,7 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
             with open(state_file, 'w') as f:
                 json.dump(cookies, f)
             print(f"Session cookies saved to {state_file}! You won't need to log in next time.")
-        
+            return
         all_image_urls = set()
         all_dp_urls = set()
         all_video_urls = set()
