@@ -29,15 +29,16 @@ def _bootstrap_env():
                 print("\nHint: On Debian/Ubuntu, you may need to install the venv package manually:")
                 print("      sudo apt install python3-venv\n")
             sys.exit(1)
+        
+        print("Installing dependencies (this may take a moment on first run)...")
+        req_file = os.path.join(base_dir, "requirements.txt")
+        if os.path.exists(req_file):
+            subprocess.check_call([venv_python, "-m", "pip", "install", "-r", req_file, "--quiet"])
+        else:
+            subprocess.check_call([venv_python, "-m", "pip", "install", "selenium", "yt-dlp", "requests", "--quiet"])
+        
+        print("Environment ready! Starting extractor...\n")
     
-    print("Checking dependencies...")
-    req_file = os.path.join(base_dir, "requirements.txt")
-    if os.path.exists(req_file):
-        subprocess.check_call([venv_python, "-m", "pip", "install", "-r", req_file, "--quiet"])
-    else:
-        subprocess.check_call([venv_python, "-m", "pip", "install", "selenium", "yt-dlp", "requests", "--quiet"])
-    
-    print("Environment ready! Starting extractor...\n")
     # Restart the script using the venv Python
     sys.exit(subprocess.call([venv_python] + sys.argv))
 
