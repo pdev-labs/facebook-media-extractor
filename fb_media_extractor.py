@@ -223,6 +223,8 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
         
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--log-level=3")
+    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
     chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36")
 
     driver = None
@@ -230,7 +232,7 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
         print("Detected Termux environment. Using system Chromium...")
         chrome_options.binary_location = "/data/data/com.termux/files/usr/bin/chromium-browser"
         try:
-            service = Service(executable_path="/data/data/com.termux/files/usr/bin/chromedriver")
+            service = Service(executable_path="/data/data/com.termux/files/usr/bin/chromedriver", log_output=subprocess.DEVNULL)
             driver = webdriver.Chrome(service=service, options=chrome_options)
         except Exception as e:
             print("Failed to start Chromium on Termux. Make sure 'chromedriver' package is installed.")
@@ -248,7 +250,8 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
                     elif shutil.which("chromium-browser"):
                         chrome_options.binary_location = shutil.which("chromium-browser")
                     
-            driver = webdriver.Chrome(options=chrome_options)
+            service = Service(log_output=subprocess.DEVNULL)
+            driver = webdriver.Chrome(service=service, options=chrome_options)
         except Exception as e:
             print(f"Failed to start browser: {e}")
             return
