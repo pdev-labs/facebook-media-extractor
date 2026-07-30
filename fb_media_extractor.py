@@ -159,9 +159,17 @@ def scroll_and_collect(driver, media_types, max_scrolls):
             print("No new content found for 5 consecutive scrolls. Reached the bottom or loading is complete.")
             break
             
-        # Scroll incrementally instead of immediately jumping to the absolute bottom
-        driver.execute_script("window.scrollBy(0, window.innerHeight * 2);")
-        time.sleep(3)
+        # Scroll the main window and any internal scrollable divs (common in Facebook albums/modals)
+        driver.execute_script("""
+            window.scrollTo(0, document.body.scrollHeight);
+            var divs = document.querySelectorAll('div');
+            for (var j = 0; j < divs.length; j++) {
+                if (divs[j].scrollHeight > divs[j].clientHeight) {
+                    divs[j].scrollBy(0, 1000);
+                }
+            }
+        """)
+        time.sleep(3.5)
         i += 1
         
     return list(image_urls), list(video_urls), list(post_texts)
