@@ -155,12 +155,13 @@ def scroll_and_collect(driver, media_types, max_scrolls):
         else:
             no_new_content_count = 0
             
-        if no_new_content_count >= 3:
-            print("No new content found for 3 scrolls. Reached the bottom of the page.")
+        if no_new_content_count >= 5:
+            print("No new content found for 5 consecutive scrolls. Reached the bottom or loading is complete.")
             break
             
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
+        # Scroll incrementally instead of immediately jumping to the absolute bottom
+        driver.execute_script("window.scrollBy(0, window.innerHeight * 2);")
+        time.sleep(3)
         i += 1
         
     return list(image_urls), list(video_urls), list(post_texts)
@@ -330,7 +331,7 @@ def extract_media(url, media_types, config, login_mode=False, is_profile=False):
             for i, img_url in enumerate(list(url_list)):
                 try:
                     response = requests.get(img_url, timeout=10)
-                    if response.status_code == 200 and len(response.content) > 5000:
+                    if response.status_code == 200 and len(response.content) > 2000:
                         filename = os.path.join(target_dir, f"image_{downloaded+1}.jpg")
                         with open(filename, 'wb') as f:
                             f.write(response.content)
