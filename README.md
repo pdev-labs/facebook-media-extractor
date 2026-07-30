@@ -104,7 +104,7 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Basic Download (Public Pages)
+### Basic Download (Single Pages/Albums)
 If the page doesn't prompt a login wall, simply run:
 ```bash
 python fb_media_extractor.py "https://www.facebook.com/YOUR_LINK_HERE" --type all
@@ -112,6 +112,17 @@ python fb_media_extractor.py "https://www.facebook.com/YOUR_LINK_HERE" --type al
 The `--type` flag controls what you download. Available options are `images` (default), `videos`, `posts`, or `all`.
 
 The media will be downloaded into `fb_media/images/`, `fb_media/videos/`, and `fb_media/posts/`.
+
+### Full Profile Extraction (Advanced)
+If you want to download an *entire* user's profile (including their DP, Cover Photo, and all historical media from their Photos and Videos tabs), use the `--profile` flag and provide the base profile URL:
+```bash
+python fb_media_extractor.py "https://www.facebook.com/username" --type all --profile
+```
+Because full profiles can be massive, the script defaults to a maximum of 50 scrolls per tab to protect your account from being rate-limited by Facebook. You can increase or decrease this limit using the `--max-scrolls` flag:
+```bash
+python fb_media_extractor.py "https://www.facebook.com/username" --profile --max-scrolls 200
+```
+When using `--profile`, the media is automatically organized into a folder named after the username (e.g., `fb_media/username/images/`).
 
 ### Bypassing Login Blocks (For large albums or restricted content)
 Facebook frequently blocks anonymous users from scrolling down. To bypass this, you need to provide your Facebook login cookies. The script looks for a file named `fb_cookies.json`. 
