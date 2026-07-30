@@ -49,6 +49,6 @@ pip install -r requirements.txt
 echo ========================================================
 echo  Installation complete! 
 echo  You can now run the tool using:
-echo  venv\Scripts\python fb_image_downloader.py ^<facebook_url^>
+echo  venv\Scripts\python fb_media_extractor.py ^<facebook_url^>
 echo ========================================================
 pause

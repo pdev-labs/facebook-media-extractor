@@ -4,9 +4,10 @@ A robust and reliable Python tool to scrape and download full resolution images 
 
 ## Features
 
-- **Dynamic Scrolling:** Automatically scrolls to the bottom of large albums to capture every single photo without missing any.
+- **Dynamic Scrolling:** Automatically scrolls to the bottom of large albums to capture every single post without missing any.
+- **Multi-Media Extraction:** Scrapes images, videos (via `yt-dlp`), and text posts directly from the feed.
 - **Login Support:** Securely bypasses Facebook's aggressive login walls by allowing you to authenticate locally and saving your session state.
-- **Automated Downloads:** Filters out UI elements/emojis and seamlessly downloads the actual photos to your local machine.
+- **Automated Downloads:** Filters out UI elements/emojis and seamlessly downloads the actual photos and videos to your local machine.
 
 ## Prerequisites
 
@@ -106,9 +107,11 @@ pip install -r requirements.txt
 ### Basic Download (Public Pages)
 If the page doesn't prompt a login wall, simply run:
 ```bash
-python fb_image_downloader.py "https://www.facebook.com/YOUR_ALBUM_LINK_HERE"
+python fb_media_extractor.py "https://www.facebook.com/YOUR_LINK_HERE" --type all
 ```
-The images will be downloaded into a `fb_images/` directory.
+The `--type` flag controls what you download. Available options are `images` (default), `videos`, `posts`, or `all`.
+
+The media will be downloaded into `fb_media/images/`, `fb_media/videos/`, and `fb_media/posts/`.
 
 ### Bypassing Login Blocks (For large albums or restricted content)
 Facebook frequently blocks anonymous users from scrolling down. To bypass this, you need to provide your Facebook login cookies. The script looks for a file named `fb_cookies.json`. 
@@ -116,7 +119,7 @@ Facebook frequently blocks anonymous users from scrolling down. To bypass this, 
 #### Method 1: Using the Desktop (Windows/Mac/Linux) or Termux:X11
 If you are on a desktop environment, or have a GUI set up in Termux (like Termux:X11), run the script once with the `--login` flag:
 ```bash
-python fb_image_downloader.py "https://www.facebook.com/YOUR_ALBUM_LINK_HERE" --login
+python fb_media_extractor.py "https://www.facebook.com/YOUR_LINK_HERE" --login
 ```
 1. A Chrome browser will pop up. 
 2. Log in to your Facebook account manually.
