@@ -16,9 +16,29 @@ A robust and reliable Python tool to scrape and download full resolution images 
 
 ## Installation
 
-It is recommended to use a virtual environment.
+We provide automated installation scripts that handle everything from installing Python, Git, and Chromium to setting up the virtual environment automatically.
 
-### Linux / Windows / macOS
+### Automated Installation (Recommended)
+
+**Windows:**
+Double-click the `install.bat` file, or run it in your command prompt:
+```cmd
+install.bat
+```
+
+**Linux / macOS / Termux (Android):**
+Run the shell script in your terminal:
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+---
+
+### Manual Installation
+If you prefer to install things manually, use a virtual environment:
+
+#### Linux / Windows / macOS
 ```bash
 # 1. Clone the repository
 git clone https://github.com/YOUR_USERNAME/facebook-media-extractor.git
