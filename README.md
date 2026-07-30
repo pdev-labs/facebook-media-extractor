@@ -50,9 +50,6 @@ source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
 
 # 3. Install the required Python packages
 pip install -r requirements.txt
-
-# 4. Install the Playwright browser binaries
-playwright install chromium
 ```
 
 ### Termux (Android)
@@ -75,7 +72,6 @@ source venv/bin/activate
 # 4. Install Python dependencies
 pip install -r requirements.txt
 ```
-*Note: In Termux, the `--login` flag (which opens a visible browser window) requires you to have an X11 environment (like Termux:X11) installed. If you don't have a GUI set up in Termux, you can generate your `fb_state.json` file on a PC and copy it over to your phone!*
 
 ## Usage
 
@@ -87,7 +83,10 @@ python fb_image_downloader.py "https://www.facebook.com/YOUR_ALBUM_LINK_HERE"
 The images will be downloaded into a `fb_images/` directory.
 
 ### Bypassing Login Blocks (For large albums or restricted content)
-Facebook frequently blocks anonymous users from scrolling down. To bypass this, run the script once with the `--login` flag:
+Facebook frequently blocks anonymous users from scrolling down. To bypass this, you need to provide your Facebook login cookies. The script looks for a file named `fb_cookies.json`. 
+
+#### Method 1: Using the Desktop (Windows/Mac/Linux) or Termux:X11
+If you are on a desktop environment, or have a GUI set up in Termux (like Termux:X11), run the script once with the `--login` flag:
 ```bash
 python fb_image_downloader.py "https://www.facebook.com/YOUR_ALBUM_LINK_HERE" --login
 ```
@@ -95,7 +94,21 @@ python fb_image_downloader.py "https://www.facebook.com/YOUR_ALBUM_LINK_HERE" --
 2. Log in to your Facebook account manually.
 3. Return to your terminal and press **Enter**.
 
-Your session will be saved to `fb_state.json`. For all future runs, you no longer need the `--login` flag; the script will automatically use your saved session and run in the background (headless) to scrape the images.
+Your session will be saved to `fb_cookies.json`.
+
+#### Method 2: The "No PC" Mobile Workaround for Termux
+If you are using Termux on your phone and don't have a graphical interface set up, you can get the cookies directly from your phone's browser:
+1. Download **Kiwi Browser** from the Google Play Store (it supports desktop Chrome extensions).
+2. Install the [Cookie-Editor extension](https://chrome.google.com/webstore/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm).
+3. Log into Facebook normally inside Kiwi Browser.
+4. Tap the three dots menu, open the **Cookie-Editor** extension, and tap **Export** (this copies your cookies to your clipboard in perfect JSON format).
+5. Go back to Termux and create the cookie file:
+   ```bash
+   nano fb_cookies.json
+   ```
+6. Paste the cookies from your clipboard, save the file (Ctrl+O, Enter), and exit (Ctrl+X).
+
+For all future runs, you no longer need the `--login` flag; the script will automatically use your saved `fb_cookies.json` session and run completely in the background (headless) to scrape the images.
 
 ## Disclaimer
 
