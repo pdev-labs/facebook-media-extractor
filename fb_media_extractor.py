@@ -66,7 +66,7 @@ CONFIG_FILE = "config.json"
 def get_default_downloads_folder():
     """Gets the system's default Downloads folder across Windows, Mac, Linux, and Termux."""
     if "com.termux" in os.environ.get("PREFIX", ""):
-        return os.path.join(os.path.expanduser("~"), "storage", "downloads", "fb_media")
+        return "/storage/emulated/0/Download"
     elif platform.system() == "Windows":
         return os.path.join(os.environ.get("USERPROFILE", os.path.expanduser("~")), "Downloads", "fb_media")
     else: # macOS and Linux
